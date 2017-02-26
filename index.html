@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="viewport" content="width=device-width,initital-scale=1.0">
+    <meta name="Author" contect="GabrielChen">
+    <meta name="keywords" contect="Web Audio API">
+    <link rel="stylesheet" href="css/MediaPlayer.css">
+</head>
+<body>
+<audio src="./music/キミとふたり.flac" controls="controls" id="myaudio">你的浏览器不支持audio标签</audio>
+<div id="music_list">
+    <p class="btn">Coloring.mp3</p>
+    <p class="btn">do.mp3</p>
+    <p class="btn">キミとふたり.flac</p>
+</div>
+<canvas id="mycanvas"></canvas>
+<script type="text/javascript">
+    var canvasAudio;
+    var analyserfa;
+    var canvas =document.getElementById("mycanvas");
+    var context =canvas.getContext("2d");
+    canvas.width =document.body.scrollWidth;
+    canvas.height =document.body.scrollHeight-100;
+    var audio =document.getElementById("myaudio");
+    if(window.screen.width<window.screen.height){
+        audio.style.width =window.screen.width+"px";
+        audio.style.transform ="translate(-50%,0) scale(1,1)";
+        canvas.width =window.screen.width;
+        canvas.height =window.screen.height-100;
+    }
+
+
+    document.getElementById("music_list").addEventListener("click",function(e){
+        var ev =ev||window.event;
+        var target =ev.target||ev.srcElement;
+        audio.src ="./music/"+target.innerHTML;
+
+
+    },false);
+    //音频
+    try{
+        canvasAudio =new (window.AudioContext||window.webkitAudioContext);
+    }catch(e){
+        throw new Error("The Web Audio API is unavailable.");
+    }
+    analyserfa =canvasAudio.createAnalyser();
+
+    window.addEventListener("load",function(e){
+        var audio =document.getElementById("myaudio");
+        var source =canvasAudio.createMediaElementSource(audio);
+        source.connect(analyserfa);
+        analyserfa.connect(canvasAudio.destination);
+
+        animate();
+    },false);
+
+    function animate(){
+        context.fillStyle ="rgb(255,255,255)";
+        var array =new Uint8Array(128);
+        analyserfa.getByteFrequencyData(array);
+        context.clearRect(0,0,canvas.width,canvas.height);
+
+        if(window.screen.width<window.screen.height){
+            for(var i=0;i<array.length;i+=4){
+                var value =(array[i]+array[i+1]+array[i+2]+array[i+3])/4;
+                context.fillRect(i*10/4+25, Math.floor(canvas.height / 2)+50, 5, -value);
+            }
+        }else {
+            for (var i = 0; i < array.length; i++) {
+                var value = array[i];
+                context.fillRect(i*10+25, Math.floor(canvas.height / 2)+100, 5, -value);
+            }
+        }
+
+//        requestAnimationFrame(animate);
+        setTimeout(animate,33);
+    }
+
+
+</script>
+</body>
+</html>
